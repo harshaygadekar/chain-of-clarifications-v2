@@ -1,0 +1,22 @@
+# Virtual environments
+venv/
+venv_python313_backup/
+.venv/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+setup_gpu_log.txt
+
+# Results (optional - remove this line if you want to track results)
+# results/
