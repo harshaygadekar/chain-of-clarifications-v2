@@ -1,6 +1,6 @@
 # 🚀 Google Colab T4 GPU Setup Guide
 
-## Quick Setup (GitHub Clone Method)
+## Quick Setup
 
 ### **STEP 1: Open Google Colab**
 1. Go to **https://colab.research.google.com** → **New Notebook**
@@ -10,10 +10,9 @@
 
 ### **STEP 2: Clone & Setup**
 ```python
-# Clone repo and install dependencies
 !git clone https://github.com/harshaygadekar/chain-of-clarifications-v2.git
 %cd chain-of-clarifications-v2
-!pip install -q transformers>=4.30.0 datasets>=2.14.0 scikit-learn>=1.3.0 seaborn>=0.12.0 scipy>=1.11.0
+!pip install -q transformers>=4.30.0 datasets>=2.14.0 scikit-learn>=1.3.0 seaborn>=0.12.0 scipy>=1.11.0 accelerate>=0.24.0
 
 print("✅ Setup complete!")
 ```
@@ -31,20 +30,24 @@ print(f"Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB"
 
 ## Running Experiments
 
-### Quick Test (5 min)
+### Quick Test (5-10 min)
 ```python
-!python experiments/baseline.py --num_examples 10
+!python experiments/baseline.py --num_examples 5
 ```
-> Uses **flan-t5-large** + **HotpotQA** by default
+> Uses **Phi-2** + **CNN/DailyMail** by default (long articles → summaries)
 
 ### Full Comparison (~1.5 hours)
 ```python
-!python experiments/baseline.py --comparison --num_examples 25
+!python experiments/baseline.py --comparison --num_examples 15
 ```
 
-### Ablation Studies (~45 min)
+### Try Different Datasets
 ```python
-!python experiments/ablation.py --all --num_examples 15
+# Long-form QA (explanatory answers)
+!python experiments/baseline.py --dataset eli5 --num_examples 10
+
+# Multi-hop QA
+!python experiments/baseline.py --dataset hotpotqa --num_examples 10
 ```
 
 ---
@@ -69,9 +72,20 @@ files.download('results.zip')
 
 | Setting | Value |
 |---------|-------|
-| Model | `google/flan-t5-large` (780M params) |
-| Dataset | HotpotQA (multi-hop QA) |
-| GPU Memory | ~3GB |
+| Model | `microsoft/phi-2` (2.7B params) |
+| Dataset | `cnn_dailymail` (summarization) |
+| GPU Memory | ~6GB |
+
+---
+
+## Available Datasets
+
+| Dataset | Type | Output Length |
+|---------|------|---------------|
+| `cnn_dailymail` | Summarization | 2-4 sentences |
+| `eli5` | Long-form QA | 2-5 sentences |
+| `hotpotqa` | Multi-hop QA | 1-2 sentences |
+| `squad` | Extractive QA | 1-3 words |
 
 ---
 
@@ -80,5 +94,5 @@ files.download('results.zip')
 | Issue | Fix |
 |-------|-----|
 | No GPU | Runtime → Change runtime type → T4 |
-| OOM Error | Reduce `--num_examples` to 15 |
+| OOM Error | Reduce `--num_examples` to 5 |
 | Import Error | Restart runtime |

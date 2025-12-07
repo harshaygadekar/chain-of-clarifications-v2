@@ -2,7 +2,7 @@
 Dataset Factory
 
 Provides a unified interface for loading different QA datasets.
-Supports SQuAD, HotpotQA, and DROP.
+Supports SQuAD, HotpotQA, DROP, CNN/DailyMail (summarization), and ELI5 (long-form QA).
 """
 
 from typing import Optional, Union
@@ -14,10 +14,12 @@ logger = logging.getLogger(__name__)
 from data.load_squad import SQuADLoader
 from data.load_hotpotqa import HotpotQALoader
 from data.load_drop import DROPLoader
+from data.load_cnn_dailymail import CNNDailyMailLoader
+from data.load_eli5 import ELI5Loader
 
 
 # Type alias for any loader
-DatasetLoader = Union[SQuADLoader, HotpotQALoader, DROPLoader]
+DatasetLoader = Union[SQuADLoader, HotpotQALoader, DROPLoader, CNNDailyMailLoader, ELI5Loader]
 
 
 def get_loader(
@@ -28,7 +30,7 @@ def get_loader(
     Get a dataset loader by name.
     
     Args:
-        dataset_name: Name of the dataset (squad, hotpotqa, drop)
+        dataset_name: Name of the dataset
         cache_dir: Optional cache directory
         
     Returns:
@@ -47,10 +49,16 @@ def get_loader(
         'hotpot_qa': HotpotQALoader,
         'hotpot': HotpotQALoader,
         'drop': DROPLoader,
+        'cnn_dailymail': CNNDailyMailLoader,
+        'cnn-dailymail': CNNDailyMailLoader,
+        'cnndm': CNNDailyMailLoader,
+        'summarization': CNNDailyMailLoader,
+        'eli5': ELI5Loader,
+        'longform': ELI5Loader,
     }
     
     if dataset_name not in loaders:
-        available = ['squad', 'hotpotqa', 'drop']
+        available = get_available_datasets()
         raise ValueError(
             f"Unknown dataset: {dataset_name}. "
             f"Available datasets: {available}"
@@ -67,7 +75,7 @@ def get_available_datasets() -> list:
     Returns:
         List of dataset names
     """
-    return ['squad', 'hotpotqa', 'drop']
+    return ['squad', 'hotpotqa', 'drop', 'cnn_dailymail', 'eli5']
 
 
 class MultiDatasetLoader:

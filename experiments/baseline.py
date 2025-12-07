@@ -56,7 +56,7 @@ class ExperimentRunner:
 
     def __init__(
         self,
-        model_name: str = "google/flan-t5-large",
+        model_name: str = "microsoft/phi-2",
         device: Optional[str] = None,
         output_dir: str = "results",
         dataset: str = "squad"
@@ -426,7 +426,7 @@ def main():
     parser.add_argument(
         '--model_name',
         type=str,
-        default='google/flan-t5-large',
+        default='microsoft/phi-2',
         help='Model name from Hugging Face'
     )
 
@@ -452,8 +452,8 @@ def main():
     parser.add_argument(
         '--dataset',
         type=str,
-        default='hotpotqa',
-        choices=['squad', 'hotpotqa', 'drop'],
+        default='cnn_dailymail',
+        choices=['squad', 'hotpotqa', 'drop', 'cnn_dailymail', 'eli5'],
         help='Dataset to use for evaluation'
     )
 

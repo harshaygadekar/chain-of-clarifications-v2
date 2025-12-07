@@ -106,7 +106,7 @@ class AblationRunner:
     
     def __init__(
         self,
-        model_name: str = "google/flan-t5-large",
+        model_name: str = "microsoft/phi-2",
         output_dir: str = "results/ablations",
         dataset: str = "squad"
     ):
@@ -392,7 +392,7 @@ def main():
     parser.add_argument(
         '--model_name',
         type=str,
-        default='google/flan-t5-large',
+        default='microsoft/phi-2',
         help='Model to use'
     )
     

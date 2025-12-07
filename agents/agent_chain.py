@@ -31,7 +31,7 @@ class AgentChain:
 
     def __init__(
         self,
-        model_name: str = "google/flan-t5-large",
+        model_name: str = "microsoft/phi-2",
         device: Optional[str] = None,
         compression_type: str = "none",
         compression_ratio: float = 0.5,
