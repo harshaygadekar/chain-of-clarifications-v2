@@ -343,31 +343,49 @@ class ExperimentRunner:
             f.write(f"  Successful: {counts.get('successful', 0)}/{counts.get('total', 0)}\n")
             f.write(f"  Failed: {counts.get('failed', 0)}/{counts.get('total', 0)}\n\n")
             
-            # Metrics
+            # Metrics - get from nested 'summary' or directly from metrics
             metrics = results.get('metrics', {})
+            summary = metrics.get('summary', metrics)  # Try nested summary first
+            
             f.write("METRICS:\n")
             
-            if 'f1' in metrics:
-                f1 = metrics['f1']
-                f.write(f"  F1 Score:\n")
-                f.write(f"    Mean: {f1.get('mean', 0):.4f}\n")
-                f.write(f"    Std:  {f1.get('std', 0):.4f}\n")
+            # F1 Score
+            if 'f1_mean' in summary:
+                f.write("  F1 Score:\n")
+                f.write(f"    Mean: {summary.get('f1_mean', 0):.4f}\n")
+                f.write(f"    Std:  {summary.get('f1_std', 0):.4f}\n")
+            elif 'f1_scores' in metrics and metrics['f1_scores']:
+                import numpy as np
+                f1_scores = metrics['f1_scores']
+                f.write("  F1 Score:\n")
+                f.write(f"    Mean: {np.mean(f1_scores):.4f}\n")
+                f.write(f"    Std:  {np.std(f1_scores):.4f}\n")
             
-            if 'exact_match' in metrics:
-                em = metrics['exact_match']
-                f.write(f"  Exact Match:\n")
-                f.write(f"    Mean: {em.get('mean', 0):.4f}\n")
-                f.write(f"    Percentage: {em.get('mean', 0) * 100:.2f}%\n")
+            # Exact Match
+            if 'em_mean' in summary:
+                f.write("  Exact Match:\n")
+                f.write(f"    Mean: {summary.get('em_mean', 0):.4f}\n")
+                f.write(f"    Percentage: {summary.get('em_mean', 0) * 100:.2f}%\n")
+            elif 'em_scores' in metrics and metrics['em_scores']:
+                import numpy as np
+                em_scores = metrics['em_scores']
+                f.write("  Exact Match:\n")
+                f.write(f"    Mean: {np.mean(em_scores):.4f}\n")
+                f.write(f"    Percentage: {np.mean(em_scores) * 100:.2f}%\n")
             
-            if 'latency' in metrics:
-                lat = metrics['latency']
-                f.write(f"  Latency:\n")
-                f.write(f"    Mean: {lat.get('mean', 0):.2f}s\n")
+            # Latency
+            if 'latency_mean' in summary:
+                f.write("  Latency:\n")
+                f.write(f"    Mean: {summary.get('latency_mean', 0):.2f}s\n")
+            elif 'latencies' in metrics and metrics['latencies']:
+                import numpy as np
+                f.write("  Latency:\n")
+                f.write(f"    Mean: {np.mean(metrics['latencies']):.2f}s\n")
             
             # Memory
             memory = results.get('memory', {})
             if memory:
-                f.write(f"\nMEMORY:\n")
+                f.write("\nMEMORY:\n")
                 peak = memory.get('peak', {})
                 f.write(f"  Peak GPU: {peak.get('gpu_allocated_mb', 0):.1f} MB\n")
                 f.write(f"  Peak RAM: {peak.get('ram_used_mb', 0):.1f} MB\n")
