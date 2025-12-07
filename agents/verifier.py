@@ -72,25 +72,25 @@ class VerifierAgent(BaseAgent):
         is_summarization = 'summarize' in question.lower() or 'summary' in question.lower()
         
         if is_summarization:
-            prompt = f"""Based on the analysis provided, write a clear and concise summary.
+            prompt = f"""Write a 2-3 sentence summary based on the analysis below.
+
+IMPORTANT: Start your summary with a person's name, place, or specific event. Do NOT start with words like "High", "Confidence", "Summary", "The article", or "This".
 
 Analysis:
 {context}
 
-Write a 2-3 sentence summary that captures the main points. Start directly with the summary content.
-
 Summary:"""
         else:
-            prompt = f"""Review the following answer and provide a final, verified response.
+            prompt = f"""Provide the final answer to this question based on the analysis.
+
+IMPORTANT: Give only the direct answer. Do NOT include confidence ratings or meta-commentary.
 
 Question: {question}
 
-Proposed Answer:
+Analysis:
 {context}
 
-Provide your final answer directly and concisely:
-
-Final Answer:"""
+Answer:"""
 
         return prompt
 
@@ -170,7 +170,10 @@ Final Answer:"""
             logger.error(f"Verifier: Error in verification output: {verification_output}")
             return verification_output
 
-        # Try to find explicit answer markers
+        # Clean junk prefixes from output
+        cleaned_output = self._clean_output(verification_output)
+
+        # Try to find explicit answer markers in cleaned output
         patterns = [
             r'Final Answer:\s*(.+?)(?:\n|$)',
             r'Answer:\s*(.+?)(?:\n|$)',
@@ -180,25 +183,25 @@ Final Answer:"""
         ]
 
         for pattern in patterns:
-            match = re.search(pattern, verification_output, re.IGNORECASE)
+            match = re.search(pattern, cleaned_output, re.IGNORECASE)
             if match:
                 answer = match.group(1).strip()
                 # Validate extracted answer doesn't look like prompt
                 if self._is_valid_answer(answer):
-                    return answer
+                    return self._clean_output(answer)
 
         # Improved fallback: use last meaningful sentence instead of first
         # (final answer often comes at the end)
-        sentences = [s.strip() for s in verification_output.split('.') if s.strip()]
+        sentences = [s.strip() for s in cleaned_output.split('.') if s.strip()]
 
         # Try last sentences first
         for sent in reversed(sentences):
             if self._is_valid_answer(sent):
-                return sent
+                return self._clean_output(sent)
 
-        # If no valid sentence found, return truncated output with warning
-        logger.warning("Verifier: Could not extract clean answer, returning truncated output")
-        return verification_output[:100].strip()
+        # If no valid sentence found, return cleaned output
+        logger.warning("Verifier: Could not extract clean answer, returning cleaned output")
+        return cleaned_output[:200].strip() if len(cleaned_output) > 200 else cleaned_output
 
     def _is_valid_answer(self, answer: str) -> bool:
         """
@@ -213,8 +216,8 @@ Final Answer:"""
         if not answer or len(answer) < 3:
             return False
 
-        # Check if it looks like a prompt instruction
-        prompt_indicators = [
+        # Check if it looks like a prompt instruction or junk output
+        junk_indicators = [
             'your task is',
             'you are a',
             'review the',
@@ -224,14 +227,64 @@ Final Answer:"""
             'task:',
             'question:',
             'passage:',
+            'confidence:',
+            'high',
+            'medium',
+            'low',
+            'answer:',
+            'summary:',
         ]
 
-        answer_lower = answer.lower()
-        for indicator in prompt_indicators:
-            if indicator in answer_lower:
+        answer_lower = answer.lower().strip()
+        
+        # Check if answer IS just a junk word
+        if answer_lower in ['high', 'medium', 'low', 'yes', 'no', 'true', 'false']:
+            return False
+        
+        for indicator in junk_indicators:
+            if answer_lower.startswith(indicator):
                 return False
 
         return True
+    
+    def _clean_output(self, text: str) -> str:
+        """
+        Clean junk prefixes from model output.
+        
+        Args:
+            text: Raw model output
+            
+        Returns:
+            Cleaned text with junk prefixes removed
+        """
+        import re
+        
+        # Patterns to remove from start of output
+        junk_patterns = [
+            r'^Confidence:\s*(High|Medium|Low)\s*\.?\s*',
+            r'^(High|Medium|Low)\s*\.?\s*',
+            r'^A\.\s*',
+            r'^B\.\s*',
+            r'^C\.\s*',
+            r'^D\.\s*',
+            r'^Answer:\s*',
+            r'^Summary:\s*',
+            r'^Final Answer:\s*',
+            r'^The answer is:\s*',
+            r'^\d+\.\s*',
+        ]
+        
+        cleaned = text.strip()
+        
+        # Apply each pattern
+        for pattern in junk_patterns:
+            cleaned = re.sub(pattern, '', cleaned, flags=re.IGNORECASE).strip()
+        
+        # If we stripped everything, return original
+        if len(cleaned) < 10 and len(text) > 20:
+            return text.strip()
+        
+        return cleaned
 
     def extract_confidence(self, verification_output: str) -> str:
         """
