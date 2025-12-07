@@ -197,7 +197,7 @@ Final Answer:"""
                 return sent
 
         # If no valid sentence found, return truncated output with warning
-        logger.warning(f"Verifier: Could not extract clean answer, returning truncated output")
+        logger.warning("Verifier: Could not extract clean answer, returning truncated output")
         return verification_output[:100].strip()
 
     def _is_valid_answer(self, answer: str) -> bool:

@@ -260,7 +260,7 @@ Answer:"""
                 return sent
 
         # If no valid sentence found, return truncated output with warning
-        logger.warning(f"Reasoner: Could not extract clean answer, returning truncated output")
+        logger.warning("Reasoner: Could not extract clean answer, returning truncated output")
         return reasoning_output[:100].strip() if reasoning_output else "[ERROR: Empty reasoning output]"
 
     def _is_valid_answer(self, answer: str) -> bool:

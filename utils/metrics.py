@@ -177,9 +177,9 @@ class MetricsTracker:
         rouge2 = 2 * rouge2_precision * rouge2_recall / (rouge2_precision + rouge2_recall) if (rouge2_precision + rouge2_recall) > 0 else 0
         
         # ROUGE-L (Longest Common Subsequence)
-        rougeL = self._compute_lcs_rouge(pred_tokens, ref_tokens)
+        rouge_l = self._compute_lcs_rouge(pred_tokens, ref_tokens)
         
-        return {'rouge1': rouge1, 'rouge2': rouge2, 'rougeL': rougeL}
+        return {'rouge1': rouge1, 'rouge2': rouge2, 'rougeL': rouge_l}
     
     def _compute_lcs_rouge(self, pred_tokens: List[str], ref_tokens: List[str]) -> float:
         """Compute ROUGE-L using Longest Common Subsequence."""
@@ -291,18 +291,18 @@ class MetricsTracker:
             print(f"Success Rate: {summary['success_rate']:.2%}")
 
         if 'f1_mean' in summary:
-            print(f"\nF1 Score:")
+            print("\nF1 Score:")
             print(f"  Mean: {summary['f1_mean']:.4f}")
             print(f"  Std:  {summary['f1_std']:.4f}")
             print(f"  Median: {summary['f1_median']:.4f}")
 
         if 'em_mean' in summary:
-            print(f"\nExact Match:")
+            print("\nExact Match:")
             print(f"  Mean: {summary['em_mean']:.4f}")
             print(f"  Percentage: {summary['em_mean']*100:.2f}%")
 
         # Context sizes
-        print(f"\nContext Sizes:")
+        print("\nContext Sizes:")
         for key in summary:
             if '_context_mean' in key:
                 role = key.replace('_context_mean', '')
@@ -312,12 +312,12 @@ class MetricsTracker:
                     print(f"    Max:  {summary[f'{role}_context_max']:.1f} tokens")
 
         if 'latency_mean' in summary:
-            print(f"\nLatency:")
+            print("\nLatency:")
             print(f"  Mean: {summary['latency_mean']:.2f}s")
             print(f"  Median: {summary['latency_median']:.2f}s")
 
         if 'avg_memory_mb' in summary:
-            print(f"\nMemory Usage:")
+            print("\nMemory Usage:")
             print(f"  Average: {summary['avg_memory_mb']:.1f} MB")
             print(f"  Peak: {summary['max_memory_mb']:.1f} MB")
 
