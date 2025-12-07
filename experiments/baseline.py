@@ -382,6 +382,20 @@ class ExperimentRunner:
                 f.write("  Latency:\n")
                 f.write(f"    Mean: {np.mean(metrics['latencies']):.2f}s\n")
             
+            # ROUGE scores (for summarization)
+            if 'rouge1_mean' in summary:
+                f.write("\n  ROUGE Scores (Summarization):\n")
+                f.write(f"    ROUGE-1: {summary.get('rouge1_mean', 0):.4f}\n")
+                f.write(f"    ROUGE-2: {summary.get('rouge2_mean', 0):.4f}\n")
+                f.write(f"    ROUGE-L: {summary.get('rougeL_mean', 0):.4f}\n")
+            elif 'rouge_scores' in metrics and metrics['rouge_scores']:
+                import numpy as np
+                rouge_scores = metrics['rouge_scores']
+                f.write("\n  ROUGE Scores (Summarization):\n")
+                f.write(f"    ROUGE-1: {np.mean([r.get('rouge1', 0) for r in rouge_scores]):.4f}\n")
+                f.write(f"    ROUGE-2: {np.mean([r.get('rouge2', 0) for r in rouge_scores]):.4f}\n")
+                f.write(f"    ROUGE-L: {np.mean([r.get('rougeL', 0) for r in rouge_scores]):.4f}\n")
+            
             # Memory
             memory = results.get('memory', {})
             if memory:

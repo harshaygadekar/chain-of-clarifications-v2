@@ -69,21 +69,29 @@ class ReasonerAgent(BaseAgent):
         Returns:
             Formatted prompt for the reasoner
         """
-        prompt = f"""You are a reasoning specialist. Your task is to analyze the given information and provide a clear, logical answer to the question.
+        # Check if this is a summarization task
+        is_summarization = 'summarize' in question.lower() or 'summary' in question.lower()
+        
+        if is_summarization:
+            prompt = f"""Analyze the following information and identify the key points.
+
+Information:
+{context}
+
+Identify the 3-4 most important facts or events from this information. List them clearly.
+
+Key Points:"""
+        else:
+            prompt = f"""Answer the following question based on the information provided.
 
 Question: {question}
 
-Relevant Information:
+Information:
 {context}
 
-Task:
-1. Carefully read the question and the relevant information provided
-2. Apply logical reasoning to connect the information to the question
-3. Formulate a clear, concise answer
-4. Provide your reasoning chain that led to this answer
-5. If the information is insufficient, state what's missing
+Provide a clear, direct answer based on the information above.
 
-Your Analysis and Answer:"""
+Answer:"""
 
         return prompt
 

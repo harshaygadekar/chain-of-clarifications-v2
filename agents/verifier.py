@@ -68,21 +68,29 @@ class VerifierAgent(BaseAgent):
         Returns:
             Formatted prompt for the verifier
         """
-        prompt = f"""You are a verification specialist. Your task is to review the reasoning and answer provided, check for logical consistency, and produce a final validated answer.
+        # Check if this is a summarization task
+        is_summarization = 'summarize' in question.lower() or 'summary' in question.lower()
+        
+        if is_summarization:
+            prompt = f"""Based on the analysis provided, write a clear and concise summary.
+
+Analysis:
+{context}
+
+Write a 2-3 sentence summary that captures the main points. Start directly with the summary content.
+
+Summary:"""
+        else:
+            prompt = f"""Review the following answer and provide a final, verified response.
 
 Question: {question}
 
-Proposed Reasoning and Answer:
+Proposed Answer:
 {context}
 
-Task:
-1. Review the reasoning chain - is it logical and consistent?
-2. Check if the answer actually addresses the question
-3. Identify any potential errors or inconsistencies
-4. Provide your final verified answer (or corrected answer if needed)
-5. Rate your confidence (High/Medium/Low)
+Provide your final answer directly and concisely:
 
-Your Verification and Final Answer:"""
+Final Answer:"""
 
         return prompt
 

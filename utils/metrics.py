@@ -36,6 +36,7 @@ class MetricsTracker:
         self.ground_truths = []
         self.f1_scores = []
         self.em_scores = []
+        self.rouge_scores = []  # ROUGE scores for summarization
         self.context_sizes = defaultdict(list)  # By agent role
         self.token_counts = defaultdict(list)
         self.latencies = []
@@ -73,8 +74,10 @@ class MetricsTracker:
         # Compute and store F1 and EM
         f1 = self.compute_f1(prediction, ground_truth)
         em = self.compute_em(prediction, ground_truth)
+        rouge = self.compute_rouge(prediction, ground_truth)
         self.f1_scores.append(f1)
         self.em_scores.append(em)
+        self.rouge_scores.append(rouge)
 
         # Store context sizes
         if context_sizes:
@@ -140,6 +143,67 @@ class MetricsTracker:
             self._normalize_answer(prediction) == self._normalize_answer(ground_truth)
         )
 
+    def compute_rouge(self, prediction: str, ground_truth: str) -> Dict[str, float]:
+        """
+        Compute ROUGE scores for summarization evaluation.
+        
+        Args:
+            prediction: Generated summary
+            ground_truth: Reference summary
+            
+        Returns:
+            Dictionary with ROUGE-1, ROUGE-2, ROUGE-L scores
+        """
+        pred_tokens = self._normalize_answer(prediction).split()
+        ref_tokens = self._normalize_answer(ground_truth).split()
+        
+        if not pred_tokens or not ref_tokens:
+            return {'rouge1': 0.0, 'rouge2': 0.0, 'rougeL': 0.0}
+        
+        # ROUGE-1 (unigram overlap)
+        pred_unigrams = set(pred_tokens)
+        ref_unigrams = set(ref_tokens)
+        rouge1_overlap = len(pred_unigrams & ref_unigrams)
+        rouge1_precision = rouge1_overlap / len(pred_unigrams) if pred_unigrams else 0
+        rouge1_recall = rouge1_overlap / len(ref_unigrams) if ref_unigrams else 0
+        rouge1 = 2 * rouge1_precision * rouge1_recall / (rouge1_precision + rouge1_recall) if (rouge1_precision + rouge1_recall) > 0 else 0
+        
+        # ROUGE-2 (bigram overlap)
+        pred_bigrams = set(zip(pred_tokens[:-1], pred_tokens[1:])) if len(pred_tokens) > 1 else set()
+        ref_bigrams = set(zip(ref_tokens[:-1], ref_tokens[1:])) if len(ref_tokens) > 1 else set()
+        rouge2_overlap = len(pred_bigrams & ref_bigrams)
+        rouge2_precision = rouge2_overlap / len(pred_bigrams) if pred_bigrams else 0
+        rouge2_recall = rouge2_overlap / len(ref_bigrams) if ref_bigrams else 0
+        rouge2 = 2 * rouge2_precision * rouge2_recall / (rouge2_precision + rouge2_recall) if (rouge2_precision + rouge2_recall) > 0 else 0
+        
+        # ROUGE-L (Longest Common Subsequence)
+        rougeL = self._compute_lcs_rouge(pred_tokens, ref_tokens)
+        
+        return {'rouge1': rouge1, 'rouge2': rouge2, 'rougeL': rougeL}
+    
+    def _compute_lcs_rouge(self, pred_tokens: List[str], ref_tokens: List[str]) -> float:
+        """Compute ROUGE-L using Longest Common Subsequence."""
+        m, n = len(pred_tokens), len(ref_tokens)
+        if m == 0 or n == 0:
+            return 0.0
+        
+        # Dynamic programming for LCS
+        dp = [[0] * (n + 1) for _ in range(m + 1)]
+        for i in range(1, m + 1):
+            for j in range(1, n + 1):
+                if pred_tokens[i-1] == ref_tokens[j-1]:
+                    dp[i][j] = dp[i-1][j-1] + 1
+                else:
+                    dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+        
+        lcs_length = dp[m][n]
+        precision = lcs_length / m
+        recall = lcs_length / n
+        
+        if precision + recall == 0:
+            return 0.0
+        return 2 * precision * recall / (precision + recall)
+
     @staticmethod
     def _normalize_answer(text: str) -> str:
         """Normalize answer text for comparison."""
@@ -170,6 +234,19 @@ class MetricsTracker:
         if self.em_scores:
             summary['em_mean'] = np.mean(self.em_scores)
             summary['em_std'] = np.std(self.em_scores)
+        
+        # ROUGE scores for summarization
+        if self.rouge_scores:
+            rouge1_scores = [r.get('rouge1', 0) for r in self.rouge_scores]
+            rouge2_scores = [r.get('rouge2', 0) for r in self.rouge_scores]
+            rougel_scores = [r.get('rougeL', 0) for r in self.rouge_scores]
+            
+            summary['rouge1_mean'] = np.mean(rouge1_scores)
+            summary['rouge1_std'] = np.std(rouge1_scores)
+            summary['rouge2_mean'] = np.mean(rouge2_scores)
+            summary['rouge2_std'] = np.std(rouge2_scores)
+            summary['rougeL_mean'] = np.mean(rougel_scores)
+            summary['rougeL_std'] = np.std(rougel_scores)
 
         # Context sizes by agent
         for role, sizes in self.context_sizes.items():
