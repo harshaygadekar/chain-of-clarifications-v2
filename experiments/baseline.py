@@ -134,6 +134,7 @@ class ExperimentRunner:
         logger.info(f"Processing {len(examples)} examples...")
         successful = 0
         failed = 0
+        detailed_outputs = []  # Store per-example agent responses
 
         for idx, example in enumerate(examples):
             logger.info(f"\n{'='*60}")
@@ -175,6 +176,17 @@ class ExperimentRunner:
                         memory_info=result.get('memory_usage', {})
                     )
                     successful += 1
+                    
+                    # Store detailed agent outputs
+                    detailed_outputs.append({
+                        'example_id': idx,
+                        'question': question,
+                        'ground_truth': ground_truth,
+                        'prediction': prediction,
+                        'agent_outputs': result.get('agent_outputs', {}),
+                        'context_sizes': result.get('context_sizes', {}),
+                        'latency': result.get('latency', 0)
+                    })
                 else:
                     logger.error(f"Failed: {result.get('error', 'Unknown error')}")
                     metrics_tracker.add_result(
@@ -231,7 +243,8 @@ class ExperimentRunner:
                 'successful': successful,
                 'failed': failed,
                 'total': len(examples)
-            }
+            },
+            'detailed_outputs': detailed_outputs  # Per-example agent responses
         }
 
         self._save_results(results, experiment_name)

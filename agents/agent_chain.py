@@ -343,6 +343,13 @@ class AgentChain:
                 'retriever_output': context_1,
                 'reasoner_output': context_2,
                 'verifier_output': verifier_result['output'],
+                'agent_outputs': {
+                    'retriever': context_1,
+                    'retriever_compressed': context_1_compressed,
+                    'reasoner': context_2,
+                    'reasoner_compressed': context_2_compressed,
+                    'verifier': verifier_result['output']
+                },
                 'context_sizes': {
                     'retriever': len(context_1.split()),
                     'retriever_compressed': len(context_1_compressed.split()),
