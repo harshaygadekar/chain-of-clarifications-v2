@@ -8,6 +8,7 @@ Supports multiple compression strategies and comprehensive metric tracking.
 import argparse
 import json
 import os
+import numpy as np
 import sys
 from pathlib import Path
 from datetime import datetime
@@ -28,6 +29,19 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+
+class NumpyEncoder(json.JSONEncoder):
+    """Custom JSON encoder for numpy types."""
+    
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
 
 
 class ExperimentRunner:
@@ -288,7 +302,7 @@ class ExperimentRunner:
         comparison_file = self.output_dir / f"comparison_{timestamp}.json"
 
         with open(comparison_file, 'w') as f:
-            json.dump(all_results, f, indent=2)
+            json.dump(all_results, f, indent=2, cls=NumpyEncoder)
 
         logger.info(f"\nComparison results saved to: {comparison_file}")
 
@@ -299,7 +313,66 @@ class ExperimentRunner:
         output_file = self.output_dir / f"{experiment_name}.json"
 
         with open(output_file, 'w') as f:
-            json.dump(results, f, indent=2)
+            json.dump(results, f, indent=2, cls=NumpyEncoder)
+        
+        # Also save a human-readable summary
+        self._save_readable_summary(results, experiment_name)
+    
+    def _save_readable_summary(self, results: Dict, experiment_name: str):
+        """Save a human-readable summary of results."""
+        summary_file = self.output_dir / f"{experiment_name}_summary.txt"
+        
+        with open(summary_file, 'w') as f:
+            f.write("=" * 60 + "\n")
+            f.write(f"EXPERIMENT SUMMARY: {experiment_name}\n")
+            f.write("=" * 60 + "\n\n")
+            
+            # Configuration
+            config = results.get('configuration', {})
+            f.write("CONFIGURATION:\n")
+            f.write(f"  Model: {config.get('model_name', 'N/A')}\n")
+            f.write(f"  Compression Type: {config.get('compression_type', 'N/A')}\n")
+            f.write(f"  Compression Ratio: {config.get('compression_ratio', 'N/A')}\n")
+            f.write(f"  Number of Examples: {config.get('num_examples', 'N/A')}\n\n")
+            
+            # Counts
+            counts = results.get('counts', {})
+            f.write("RESULTS:\n")
+            f.write(f"  Successful: {counts.get('successful', 0)}/{counts.get('total', 0)}\n")
+            f.write(f"  Failed: {counts.get('failed', 0)}/{counts.get('total', 0)}\n\n")
+            
+            # Metrics
+            metrics = results.get('metrics', {})
+            f.write("METRICS:\n")
+            
+            if 'f1' in metrics:
+                f1 = metrics['f1']
+                f.write(f"  F1 Score:\n")
+                f.write(f"    Mean: {f1.get('mean', 0):.4f}\n")
+                f.write(f"    Std:  {f1.get('std', 0):.4f}\n")
+            
+            if 'exact_match' in metrics:
+                em = metrics['exact_match']
+                f.write(f"  Exact Match:\n")
+                f.write(f"    Mean: {em.get('mean', 0):.4f}\n")
+                f.write(f"    Percentage: {em.get('mean', 0) * 100:.2f}%\n")
+            
+            if 'latency' in metrics:
+                lat = metrics['latency']
+                f.write(f"  Latency:\n")
+                f.write(f"    Mean: {lat.get('mean', 0):.2f}s\n")
+            
+            # Memory
+            memory = results.get('memory', {})
+            if memory:
+                f.write(f"\nMEMORY:\n")
+                peak = memory.get('peak', {})
+                f.write(f"  Peak GPU: {peak.get('gpu_allocated_mb', 0):.1f} MB\n")
+                f.write(f"  Peak RAM: {peak.get('ram_used_mb', 0):.1f} MB\n")
+            
+            f.write("\n" + "=" * 60 + "\n")
+        
+        logger.info(f"Summary saved to: {summary_file}")
 
         logger.info(f"\nResults saved to: {output_file}")
 
