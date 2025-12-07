@@ -315,6 +315,8 @@ class ExperimentRunner:
         with open(output_file, 'w') as f:
             json.dump(results, f, indent=2, cls=NumpyEncoder)
         
+        logger.info(f"Results saved to: {output_file}")
+        
         # Also save a human-readable summary
         self._save_readable_summary(results, experiment_name)
     
@@ -373,8 +375,6 @@ class ExperimentRunner:
             f.write("\n" + "=" * 60 + "\n")
         
         logger.info(f"Summary saved to: {summary_file}")
-
-        logger.info(f"\nResults saved to: {output_file}")
 
 
 def main():
