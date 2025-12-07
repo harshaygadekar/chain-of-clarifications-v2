@@ -120,13 +120,13 @@ class AgentChain:
 
             # Load model based on type
             if is_t5_family:
-                logger.info(f"Loading Seq2Seq model (T5 family)")
+                logger.info("Loading Seq2Seq model (T5 family)")
                 model = AutoModelForSeq2SeqLM.from_pretrained(
                     self.model_name,
                     torch_dtype=dtype
                 )
             else:
-                logger.info(f"Loading CausalLM model")
+                logger.info("Loading CausalLM model")
                 model = AutoModelForCausalLM.from_pretrained(
                     self.model_name,
                     torch_dtype=dtype
@@ -142,12 +142,12 @@ class AgentChain:
                 if torch.cuda.is_available():
                     allocated = torch.cuda.memory_allocated(0) / 1024**2
                     reserved = torch.cuda.memory_reserved(0) / 1024**2
-                    logger.info(f"GPU Memory after shared model load:")
+                    logger.info("GPU Memory after shared model load:")
                     logger.info(f"  Allocated: {allocated:.2f} MB")
                     logger.info(f"  Reserved: {reserved:.2f} MB")
             else:
                 model.to(device)
-                logger.info(f"Shared model loaded on CPU")
+                logger.info("Shared model loaded on CPU")
 
             model.eval()
 
@@ -158,7 +158,7 @@ class AgentChain:
                 else:
                     tokenizer.pad_token = tokenizer.unk_token
 
-            logger.info(f"Shared model loaded successfully")
+            logger.info("Shared model loaded successfully")
             return model, tokenizer
 
         except Exception as e:
