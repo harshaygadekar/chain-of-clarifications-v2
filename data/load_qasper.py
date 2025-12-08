@@ -46,7 +46,8 @@ class QASPERLoader:
             self.dataset = load_dataset(
                 "allenai/qasper",
                 split=split,
-                cache_dir=self.cache_dir
+                cache_dir=self.cache_dir,
+                trust_remote_code=True  # Required for dataset scripts
             )
             
             logger.info(f"Loaded {len(self.dataset)} papers")
