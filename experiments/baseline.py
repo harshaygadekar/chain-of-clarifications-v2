@@ -479,8 +479,8 @@ def main():
     parser.add_argument(
         '--dataset',
         type=str,
-        default='qasper',
-        choices=['qasper', 'squad', 'hotpotqa', 'drop', 'cnn_dailymail', 'eli5'],
+        default='narrativeqa',
+        choices=['narrativeqa', 'qasper', 'squad', 'hotpotqa', 'drop', 'cnn_dailymail', 'eli5'],
         help='Dataset to use for evaluation'
     )
 
