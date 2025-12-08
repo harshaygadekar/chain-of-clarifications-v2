@@ -73,25 +73,39 @@ class ReasonerAgent(BaseAgent):
         is_summarization = 'summarize' in question.lower() or 'summary' in question.lower()
         
         if is_summarization:
-            prompt = f"""Analyze the following information and identify the key points.
+            prompt = f"""Analyze the information and extract key points step by step.
+
+Example:
+Information: "Apple announced the iPhone 15 at their September event. The new model features a USB-C port replacing Lightning. Tim Cook presented the device. Pre-orders start Friday."
+Step 1 - Main event: Apple announced iPhone 15
+Step 2 - Key change: USB-C replaces Lightning port
+Step 3 - Details: Tim Cook presented, pre-orders Friday
+Key Points: Apple unveiled iPhone 15 with USB-C port at September event. Tim Cook presented the device, with pre-orders starting Friday.
+
+Now analyze this information:
 
 Information:
 {context}
 
-Identify the 3-4 most important facts or events from this information. List them clearly.
-
-Key Points:"""
+Step 1 - Main event:"""
         else:
-            prompt = f"""Answer the following question based on the information provided.
+            prompt = f"""Answer the question using step-by-step reasoning.
+
+Example:
+Question: What is the capital of France?
+Information: "France is a country in Western Europe. Paris is the largest city and capital. The Eiffel Tower is in Paris."
+Step 1: The question asks for France's capital
+Step 2: The information states "Paris is the largest city and capital"
+Answer: Paris is the capital of France.
+
+Now answer this question:
 
 Question: {question}
 
 Information:
 {context}
 
-Provide a clear, direct answer based on the information above.
-
-Answer:"""
+Step 1:"""
 
         return prompt
 

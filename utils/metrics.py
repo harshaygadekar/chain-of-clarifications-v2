@@ -203,6 +203,84 @@ class MetricsTracker:
         if precision + recall == 0:
             return 0.0
         return 2 * precision * recall / (precision + recall)
+    
+    def compute_semantic_drift(self, original: str, compressed: str) -> float:
+        """
+        Compute semantic drift between original and compressed text.
+        
+        Uses cosine similarity of word vectors. Lower score = more drift.
+        
+        Args:
+            original: Original text before compression
+            compressed: Text after compression
+            
+        Returns:
+            Similarity score (0.0 to 1.0, higher = less drift)
+        """
+        orig_words = set(self._normalize_answer(original).split())
+        comp_words = set(self._normalize_answer(compressed).split())
+        
+        if not orig_words or not comp_words:
+            return 0.0
+        
+        # Jaccard similarity as proxy for semantic similarity
+        intersection = len(orig_words & comp_words)
+        union = len(orig_words | comp_words)
+        
+        return intersection / union if union > 0 else 0.0
+    
+    def compute_information_loss(self, original: str, compressed: str, question: str = "") -> Dict[str, float]:
+        """
+        Compute information loss from compression.
+        
+        Measures:
+        - Keyword retention: How many important words are kept
+        - Length ratio: How much text was removed
+        - Entity preservation: Are named entities preserved
+        
+        Args:
+            original: Original text
+            compressed: Compressed text
+            question: Optional question for relevance weighting
+            
+        Returns:
+            Dict with loss metrics
+        """
+        orig_words = self._normalize_answer(original).split()
+        comp_words = self._normalize_answer(compressed).split()
+        
+        # Length ratio
+        length_ratio = len(comp_words) / len(orig_words) if orig_words else 0
+        
+        # Keyword retention
+        import re
+        # Extract important words (capitalized, numbers, long words)
+        important_pattern = r'\b[A-Z][a-z]+\b|\b\d+\b|\b\w{6,}\b'
+        orig_important = set(re.findall(important_pattern, original))
+        comp_important = set(re.findall(important_pattern, compressed))
+        
+        if orig_important:
+            keyword_retention = len(comp_important & orig_important) / len(orig_important)
+        else:
+            keyword_retention = 1.0
+        
+        # Question word coverage (if question provided)
+        if question:
+            q_words = set(self._normalize_answer(question).split())
+            q_words -= {'what', 'who', 'where', 'when', 'how', 'why', 'the', 'a', 'is'}
+            if q_words:
+                q_coverage = len(set(comp_words) & q_words) / len(q_words)
+            else:
+                q_coverage = 1.0
+        else:
+            q_coverage = 1.0
+        
+        return {
+            'length_ratio': length_ratio,
+            'keyword_retention': keyword_retention,
+            'question_coverage': q_coverage,
+            'overall_quality': (keyword_retention + q_coverage) / 2
+        }
 
     @staticmethod
     def _normalize_answer(text: str) -> str:

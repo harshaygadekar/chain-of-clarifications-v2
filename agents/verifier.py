@@ -74,16 +74,29 @@ class VerifierAgent(BaseAgent):
         if is_summarization:
             prompt = f"""Write a 2-3 sentence summary based on the analysis below.
 
-IMPORTANT: Start your summary with a person's name, place, or specific event. Do NOT start with words like "High", "Confidence", "Summary", "The article", or "This".
+Example 1:
+Analysis: "The match at Old Trafford saw Manchester United defeat Liverpool 2-1. Goals came from Rashford and Fernandes. Henderson scored for Liverpool. The win moves United to third place."
+Summary: Manchester United defeated Liverpool 2-1 at Old Trafford with goals from Rashford and Fernandes. The victory moves United to third place in the table.
+
+Example 2:
+Analysis: "Scientists discovered a new species of deep-sea fish near Japan. The fish has bioluminescent features and lives at 3000 meters depth. Researchers published findings in Nature."
+Summary: Scientists discovered a bioluminescent deep-sea fish species near Japan, living at 3000 meters depth. The findings were published in Nature journal.
+
+Now write a summary for this analysis. Start with a specific name, place, or event:
 
 Analysis:
 {context}
 
 Summary:"""
         else:
-            prompt = f"""Provide the final answer to this question based on the analysis.
+            prompt = f"""Answer the question based on the analysis provided.
 
-IMPORTANT: Give only the direct answer. Do NOT include confidence ratings or meta-commentary.
+Example:
+Question: Who won the 2022 FIFA World Cup?
+Analysis: "Argentina played France in the final. The match ended 3-3 after extra time. Argentina won on penalties 4-2. Messi lifted the trophy."
+Answer: Argentina won the 2022 FIFA World Cup, defeating France on penalties.
+
+Now answer this question directly:
 
 Question: {question}
 
