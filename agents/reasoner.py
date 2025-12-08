@@ -73,30 +73,30 @@ class ReasonerAgent(BaseAgent):
         is_summarization = 'summarize' in question.lower() or 'summary' in question.lower()
         
         if is_summarization:
-            prompt = f"""Analyze the information and extract key points step by step.
+            prompt = f"""Analyze the scientific information and extract key points step by step.
 
 Example:
-Information: "Apple announced the iPhone 15 at their September event. The new model features a USB-C port replacing Lightning. Tim Cook presented the device. Pre-orders start Friday."
-Step 1 - Main event: Apple announced iPhone 15
-Step 2 - Key change: USB-C replaces Lightning port
-Step 3 - Details: Tim Cook presented, pre-orders Friday
-Key Points: Apple unveiled iPhone 15 with USB-C port at September event. Tim Cook presented the device, with pre-orders starting Friday.
+Information: "The paper introduces a new BERT variant called SciBERT. It was pre-trained on 1.14M papers from Semantic Scholar. SciBERT outperforms BERT on scientific NLP tasks by 3-5%."
+Step 1 - Main contribution: SciBERT, a new BERT variant for scientific text
+Step 2 - Training data: 1.14M papers from Semantic Scholar
+Step 3 - Results: 3-5% improvement over BERT on scientific NLP tasks
+Key Points: SciBERT is a BERT variant pre-trained on 1.14M scientific papers that achieves 3-5% improvement over BERT on scientific NLP benchmarks.
 
 Now analyze this information:
 
 Information:
 {context}
 
-Step 1 - Main event:"""
+Step 1 - Main contribution:"""
         else:
-            prompt = f"""Answer the question using step-by-step reasoning.
+            prompt = f"""Answer the scientific question using step-by-step reasoning.
 
 Example:
-Question: What is the capital of France?
-Information: "France is a country in Western Europe. Paris is the largest city and capital. The Eiffel Tower is in Paris."
-Step 1: The question asks for France's capital
-Step 2: The information states "Paris is the largest city and capital"
-Answer: Paris is the capital of France.
+Question: What pre-training corpus was used?
+Information: "The model was pre-trained on PubMed abstracts and PMC full-text articles. The combined corpus contains 3.2B words."
+Step 1: The question asks about the pre-training corpus
+Step 2: The information states the corpus is "PubMed abstracts and PMC full-text articles"
+Answer: PubMed abstracts and PMC full-text articles were used, totaling 3.2B words.
 
 Now answer this question:
 

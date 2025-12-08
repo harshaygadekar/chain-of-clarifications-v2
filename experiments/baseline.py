@@ -56,7 +56,7 @@ class ExperimentRunner:
 
     def __init__(
         self,
-        model_name: str = "microsoft/phi-2",
+        model_name: str = "microsoft/Phi-3.5-mini-instruct",
         device: Optional[str] = None,
         output_dir: str = "results",
         dataset: str = "squad"
@@ -453,7 +453,7 @@ def main():
     parser.add_argument(
         '--model_name',
         type=str,
-        default='microsoft/phi-2',
+        default='microsoft/Phi-3.5-mini-instruct',
         help='Model name from Hugging Face'
     )
 

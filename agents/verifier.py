@@ -75,26 +75,26 @@ class VerifierAgent(BaseAgent):
             prompt = f"""Write a 2-3 sentence summary based on the analysis below.
 
 Example 1:
-Analysis: "The match at Old Trafford saw Manchester United defeat Liverpool 2-1. Goals came from Rashford and Fernandes. Henderson scored for Liverpool. The win moves United to third place."
-Summary: Manchester United defeated Liverpool 2-1 at Old Trafford with goals from Rashford and Fernandes. The victory moves United to third place in the table.
+Analysis: "The paper proposes a novel attention mechanism for transformer models. Experiments on GLUE benchmark show 2.3% improvement over BERT. The method reduces computational cost by 40%."
+Summary: The paper introduces a new attention mechanism that improves transformer performance by 2.3% on GLUE while reducing computational cost by 40%.
 
 Example 2:
-Analysis: "Scientists discovered a new species of deep-sea fish near Japan. The fish has bioluminescent features and lives at 3000 meters depth. Researchers published findings in Nature."
-Summary: Scientists discovered a bioluminescent deep-sea fish species near Japan, living at 3000 meters depth. The findings were published in Nature journal.
+Analysis: "Researchers evaluated three compression methods on scientific documents. Role-specific compression achieved the best F1 score of 0.78. Fixed-ratio compression was fastest but lost semantic information."
+Summary: Role-specific compression achieved the highest F1 score (0.78) among three methods tested on scientific documents, outperforming fixed-ratio compression which sacrificed semantic accuracy for speed.
 
-Now write a summary for this analysis. Start with a specific name, place, or event:
+Now write a summary for this analysis:
 
 Analysis:
 {context}
 
 Summary:"""
         else:
-            prompt = f"""Answer the question based on the analysis provided.
+            prompt = f"""Answer the question based on the scientific analysis provided.
 
 Example:
-Question: Who won the 2022 FIFA World Cup?
-Analysis: "Argentina played France in the final. The match ended 3-3 after extra time. Argentina won on penalties 4-2. Messi lifted the trophy."
-Answer: Argentina won the 2022 FIFA World Cup, defeating France on penalties.
+Question: What dataset was used to evaluate the model?
+Analysis: "The authors evaluated their approach on SQuAD 2.0 and Natural Questions datasets. Results showed significant improvements on both benchmarks."
+Answer: The model was evaluated on SQuAD 2.0 and Natural Questions datasets.
 
 Now answer this question directly:
 

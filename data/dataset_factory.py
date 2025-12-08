@@ -2,7 +2,7 @@
 Dataset Factory
 
 Provides a unified interface for loading different QA datasets.
-Supports SQuAD, HotpotQA, DROP, CNN/DailyMail (summarization), and ELI5 (long-form QA).
+Supports QASPER (primary), SQuAD, HotpotQA, DROP, CNN/DailyMail, and ELI5.
 """
 
 from typing import Optional, Union
@@ -16,10 +16,11 @@ from data.load_hotpotqa import HotpotQALoader
 from data.load_drop import DROPLoader
 from data.load_cnn_dailymail import CNNDailyMailLoader
 from data.load_eli5 import ELI5Loader
+from data.load_qasper import QASPERLoader
 
 
 # Type alias for any loader
-DatasetLoader = Union[SQuADLoader, HotpotQALoader, DROPLoader, CNNDailyMailLoader, ELI5Loader]
+DatasetLoader = Union[SQuADLoader, HotpotQALoader, DROPLoader, CNNDailyMailLoader, ELI5Loader, QASPERLoader]
 
 
 def get_loader(
@@ -42,6 +43,8 @@ def get_loader(
     dataset_name = dataset_name.lower().strip()
     
     loaders = {
+        'qasper': QASPERLoader,
+        'scientific': QASPERLoader,
         'squad': SQuADLoader,
         'squad1.1': SQuADLoader,
         'squad-1.1': SQuADLoader,
@@ -75,7 +78,7 @@ def get_available_datasets() -> list:
     Returns:
         List of dataset names
     """
-    return ['squad', 'hotpotqa', 'drop', 'cnn_dailymail', 'eli5']
+    return ['qasper', 'squad', 'hotpotqa', 'drop', 'cnn_dailymail', 'eli5']
 
 
 class MultiDatasetLoader:

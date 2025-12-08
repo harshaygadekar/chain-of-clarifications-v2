@@ -1,98 +1,123 @@
-# 🚀 Google Colab T4 GPU Setup Guide
+# Chain of Clarifications - Google Colab Setup Guide
 
-## Quick Setup
+## Complete Setup & Run Commands
 
-### **STEP 1: Open Google Colab**
-1. Go to **https://colab.research.google.com** → **New Notebook**
-2. `Runtime` → `Change runtime type` → **T4 GPU** → Save
-
----
-
-### **STEP 2: Clone & Setup**
+### Step 1: Clone Repository
 ```python
 !git clone https://github.com/harshaygadekar/chain-of-clarifications-v2.git
 %cd chain-of-clarifications-v2
-!pip install -q transformers>=4.30.0 datasets>=2.14.0 scikit-learn>=1.3.0 seaborn>=0.12.0 scipy>=1.11.0 accelerate>=0.24.0
-
-print("✅ Setup complete!")
 ```
 
----
-
-### **STEP 3: Verify GPU**
+### Step 2: Install Dependencies
 ```python
+!pip install -q transformers datasets accelerate scipy seaborn plotly
+```
+
+### Step 3: Check GPU
+```python
+!nvidia-smi
 import torch
-print(f"GPU: {torch.cuda.get_device_name(0)}")
-print(f"Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
+print(f"CUDA available: {torch.cuda.is_available()}")
+print(f"GPU: {torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'None'}")
+```
+
+### Step 4: Run Experiments
+
+#### Quick Test (5 examples)
+```python
+!python experiments/baseline.py --dataset qasper --compression_type role_specific --num_examples 5
+```
+
+#### Full Experiment (50 examples)
+```python
+!python experiments/baseline.py \
+    --dataset qasper \
+    --compression_type role_specific \
+    --compression_ratio 0.5 \
+    --num_examples 50
+```
+
+#### Run All Compression Methods
+```python
+!python experiments/baseline.py --dataset qasper --compression_type none --num_examples 50
+!python experiments/baseline.py --dataset qasper --compression_type fixed --num_examples 50
+!python experiments/baseline.py --dataset qasper --compression_type role_specific --num_examples 50
+!python experiments/baseline.py --dataset qasper --compression_type dynamic --num_examples 50
+!python experiments/baseline.py --dataset qasper --compression_type semantic --num_examples 50
+```
+
+### Step 5: Visualize Results
+
+#### Static Plots (Matplotlib)
+```python
+!python experiments/visualize.py --results_dir results
+```
+
+#### Interactive Plots (Plotly)
+```python
+from experiments.interactive_viz import generate_all_interactive_plots
+generate_all_interactive_plots("results", "results/interactive")
+```
+
+### Step 6: Error Analysis
+```python
+import json
+from analysis.error_analysis import ErrorAnalyzer
+
+# Load results
+with open('results/role_specific_0.5_latest.json') as f:
+    data = json.load(f)
+
+# Analyze errors
+analyzer = ErrorAnalyzer()
+for output in data.get('detailed_outputs', []):
+    analyzer.analyze(
+        prediction=output['prediction'],
+        ground_truth=output['ground_truth'],
+        source_context=output.get('agent_outputs', {}).get('retriever', ''),
+        question=output['question']
+    )
+
+analyzer.print_report()
+```
+
+### Step 7: View Detailed Outputs
+```python
+import json
+
+with open('results/role_specific_0.5_latest.json') as f:
+    data = json.load(f)
+
+for ex in data.get('detailed_outputs', [])[:3]:
+    print(f"Question: {ex['question'][:80]}...")
+    print(f"Ground Truth: {ex['ground_truth'][:100]}...")
+    print(f"Prediction: {ex['prediction'][:100]}...")
+    print(f"Retriever: {ex['agent_outputs']['retriever'][:150]}...")
+    print("-" * 50)
 ```
 
 ---
 
-## Running Experiments
+## Configuration
 
-### Quick Test (5-10 min)
-```python
-!python experiments/baseline.py --num_examples 5
-```
-> Uses **Phi-2** + **CNN/DailyMail** by default (long articles → summaries)
-
-### Full Comparison (~1.5 hours)
-```python
-!python experiments/baseline.py --comparison --num_examples 15
-```
-
-### Try Different Datasets
-```python
-# Long-form QA (explanatory answers)
-!python experiments/baseline.py --dataset eli5 --num_examples 10
-
-# Multi-hop QA
-!python experiments/baseline.py --dataset hotpotqa --num_examples 10
-```
-
----
-
-## Generate Visualizations
-```python
-!python experiments/visualize.py
-```
-
----
-
-## Download Results
-```python
-from google.colab import files
-!zip -r results.zip results/
-files.download('results.zip')
-```
-
----
-
-## Default Configuration
-
-| Setting | Value |
-|---------|-------|
-| Model | `microsoft/phi-2` (2.7B params) |
-| Dataset | `cnn_dailymail` (summarization) |
-| GPU Memory | ~6GB |
-
----
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `--model_name` | `microsoft/Phi-3.5-mini-instruct` | HuggingFace model |
+| `--dataset` | `qasper` | Dataset name |
+| `--compression_type` | `none` | Compression method |
+| `--compression_ratio` | `0.5` | Compression ratio (0.0-1.0) |
+| `--num_examples` | `100` | Number of examples |
 
 ## Available Datasets
+- `qasper` - Scientific paper QA (recommended)
+- `squad` - Factoid QA
+- `hotpotqa` - Multi-hop QA
+- `cnn_dailymail` - Summarization
+- `eli5` - Long-form QA
 
-| Dataset | Type | Output Length |
-|---------|------|---------------|
-| `cnn_dailymail` | Summarization | 2-4 sentences |
-| `eli5` | Long-form QA | 2-5 sentences |
-| `hotpotqa` | Multi-hop QA | 1-2 sentences |
-| `squad` | Extractive QA | 1-3 words |
-
----
-
-## Troubleshooting
-
-| Issue | Fix |
-|-------|-----|
-| No GPU | Runtime → Change runtime type → T4 |
-| OOM Error | Reduce `--num_examples` to 5 |
-| Import Error | Restart runtime |
+## Available Compression Types
+- `none` - No compression (baseline)
+- `fixed` - Fixed-ratio truncation
+- `role_specific` - Role-aware compression (ours)
+- `dynamic` - Adaptive ratio selection
+- `semantic` - Semantic-aware compression
