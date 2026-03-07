@@ -1,4 +1,4 @@
-# Chain of Clarifications v2
+# Role based context compression
 
 A multi-agent question-answering system that uses a sequential **Retriever → Reasoner → Verifier** pipeline with intelligent context compression. The core idea is that each agent in the chain only receives the information it actually needs — reducing noise, saving tokens, and improving answer quality.
 
